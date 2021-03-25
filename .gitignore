@@ -1,0 +1,4 @@
+
+bin/Debug/ProjetOS
+*.o
+*.cbp
