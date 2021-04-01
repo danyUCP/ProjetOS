@@ -3,6 +3,9 @@
 
 #define MEM_SIZE 10000
 
+
+char *memory;
+
 typedef struct block
 {
     size_t size;
@@ -12,6 +15,18 @@ typedef struct block
 
     struct block *next;
 }MemBlock;
+
+int initMemory(int nBytes)
+{
+    memory = malloc(nBytes);
+
+    if(memory == NULL)
+        return 0;
+
+    return nBytes;
+}
+
+
 
 
 int main()
