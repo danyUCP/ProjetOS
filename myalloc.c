@@ -1,9 +1,32 @@
+/**
+ * \file myalloc.c
+ * \brief Définitions des fonctions
+ * \author Daniel FRANCOIS et Julien VEYSSEYRE
+ * \version 0.1
+ * \date 4 avril 2021
+ *
+ * Définition de l'ensemble des fonctions nécéssaires au fonctionnement de MyAlloc
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "myalloc.h"
 
 
-
+/**
+ * C'est la déclaration du tableau qui est considéré comme notre mémoire.
+ * Nous obtenons une allocation dynamique de mémoire en utilisant un tableau
+ * de type char* de taille nBytes.
+ *
+ * Ensuite, nous initialisons un pointeur de type "MemBlock", nommé firstBlock
+ * pointant vers l'adresse de départ du bloc de mémoire que nous avons
+ * alloué auparavant. Ce pointeur firstBlock pointera vers le début de la
+ * liste chaînée des blocs de métadonnées.
+ *
+ * \param nBytes Taille de la mémoire à réserver au programme
+ * \return La taille de la mémoire allouée
+ */
 int initMemory(int nBytes)
 {
     mem = (Memory*) malloc(sizeof(Memory));
@@ -30,7 +53,19 @@ int initMemory(int nBytes)
     return mem->size;
 }
 
-
+/**
+ * C’est dans cette fonction que se produit l’allocation d’un bloc mémoire
+ * dans notre mémoire. On vérifie si la mémoire demandée est d’abord
+ * disponible, si la taille demandée est insuffiante
+ *
+ * Nous utilisons l'algorithme First-fit pour trouver un bloc libre pour
+ * allouer de la mémoire. Si nous trouvons un bloc libre qui correspond
+ * exactement à la taille requise, nous n'avons pas besoin de faire le
+ * fractionnement.
+ *
+ * \param nBytes Taille du bloc à allouer
+ * \return Pointeur sur les données du bloc alloué
+ */
 void* myAlloc(int nBytes)
 {
     if(nBytes < 1 || nBytes > mem->size)
@@ -106,7 +141,13 @@ void* myAlloc(int nBytes)
     return (void*)allocated->data;
 }
 
-
+/**
+ * Cette fonction est essentielle pour résoudre les problèmes de fragmentation
+ * des blocs libres de mémoire. En effet, lors de la libération d’un bloc
+ * mémoire, On parcours la liste chainée des blocs de mémoire afin de fusionner
+ * les blocs libres successifs en supprimant le bloc de métadonnées au milieu
+ * afin de palier à ce problème de fragmentation.
+ */
 void fusionFreeBlocks()
 {
     MemBlock *current = mem->first;
@@ -127,7 +168,17 @@ void fusionFreeBlocks()
     }
 }
 
-
+/**
+ * Ici, nous vérifions si l'adresse à laquelle le pointeur donné en argument
+ * de la fonction se trouve réellement dans la plage d'adresses du tableau
+ * mémoire que nous avons utilisé à cet effet. Si oui, nous définissons
+ * simplement l'indicateur libre dans le bloc de métadonnées sur 1 indiquant
+ * qu'il est libre et parcourons et fusionnons les blocs consécutifs qui sont
+ * libres, le cas échéant.
+ *
+ * \param p Pointeur sur les données du bloc à libérer
+ * \return La taille du bloc libéré
+ */
 int myFree(void* p)
 {
     MemBlock *current = p - sizeof(MemBlock);
@@ -142,7 +193,12 @@ int myFree(void* p)
     return size;
 }
 
-
+/**
+ * La fonction freeMemory a été crée, elle permet la désallocations de tous les blocs
+ * de mémoire et surtout de la mémoire initialement réservée au programme.
+ *
+ * \return La taille de la mémoire récupérée
+ */
 int freeMemory()
 {
     MemBlock *current = mem->first, *next;
@@ -172,7 +228,9 @@ int freeMemory()
     return nBytes;
 }
 
-
+/**
+ * Cette fonction permet afficher l'état de la mémoire avec tous ses blocs
+ */
 void printAllMemory()
 {
     MemBlock *current = mem->first;

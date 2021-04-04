@@ -1,3 +1,15 @@
+/**
+ * \file test.c
+ * \brief Programme de test
+ * \author Daniel FRANCOIS et Julien VEYSSEYRE
+ * \version 0.1
+ * \date 4 avril 2021
+ *
+ * Programme de test permettant d'effectuer quelques allocations
+ * et désallocations de façon interactive
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -41,6 +53,7 @@ void modeI()
 {
     int choice = 0, size = 0, stop = 0, stop2 = 0;
 
+    system("clear");
     printf("Bienvenue dans le mode interactif de MyAlloc\n\n");
 
 

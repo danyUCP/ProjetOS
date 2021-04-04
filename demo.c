@@ -1,3 +1,15 @@
+/**
+ * \file demo.c
+ * \brief Programme de démonstration
+ * \author Daniel FRANCOIS et Julien VEYSSEYRE
+ * \version 0.1
+ * \date 4 avril 2021
+ *
+ * Programme de démonstrations effectuant quelques allocations
+ * et désallocations
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "myalloc.h"
