@@ -63,32 +63,97 @@ void* myAlloc(int nBytes)
     }
 
     MemBlock *current = mem->first;
+    MemBlock *allocated = NULL;
+    int i = 1;
 
-    divideFreeBlock(current, nBytes);
+    printf("========== Début allocation ==========\n\n");
+
+    printf("Espace à allouer : %d bytes\n\n", nBytes);
+    while(current != NULL)
+    {
+        if(!current->free)
+        {
+            printf("Bloc %d (%d bytes) : Déjà alloué\n", i, current->size);
+            current = current->next;
+            i++;
+        }
+        else
+        {
+            if(current->size < nBytes)
+            {
+                printf("Bloc %d (%d bytes) : Taille insuffisante\n", i, current->size);
+                current = current->next;
+                i++;
+            }
+            else if(current->size > nBytes + sizeof(MemBlock))
+            {
+                printf("Bloc %d (%d bytes) : Division du bloc mémoire\n", i, current->size);
+
+                MemBlock *newFreeBlock = (void*)current + nBytes + sizeof(MemBlock);
+                newFreeBlock->size = current->size - nBytes - sizeof(MemBlock);
+                newFreeBlock->free = 1;
+                newFreeBlock->data = (char*) ((void*)newFreeBlock + sizeof(MemBlock));
+                newFreeBlock->next = current->next;
+
+                current->size = nBytes;
+                current->free = 0;
+                current->next = newFreeBlock;
+
+                allocated = current;
+                break;
+            }
+            else
+            {
+                printf("Bloc %d (%d bytes) : Taille de bloc parfaite\n", i, current->size);
+
+                current->size = nBytes;
+                current->free = 0;
+
+                allocated = current;
+                break;
+            }
+        }
+    }
+
+    printf("\n=========== Fin allocation ===========\n");
+    if(allocated != NULL)
+        printf("Succès\n\n");
+    else
+        printf("Echec\n\n");
 
 
+    return (void*)allocated;
 }
 
-void divideFreeBlock(MemBlock *freeBlock, int size)
+void fusionFreeBlocks()
 {
-    MemBlock *newFreeBlock = (void*)freeBlock + size + sizeof(MemBlock);
-    newFreeBlock->size = freeBlock->size - size - sizeof(MemBlock);
-    newFreeBlock->free = 1;
-    newFreeBlock->data = (char*) ((void*)newFreeBlock + sizeof(MemBlock));
-    newFreeBlock->next = freeBlock->next;
+    MemBlock *current = mem->first;
+    int i = 1;
 
-    freeBlock->size = size;
-    freeBlock->free = 0;
-    freeBlock->next = newFreeBlock;
+    while(current != NULL && current->next != NULL)
+    {
+        if(current->free && current->next->free)
+        {
+            printf("Fusion du bloc %d et %d (%d + %d + %d bytes)\n", i, i + 1, current->size, current->next->size, (int)sizeof(MemBlock));
+            current->size += current->next->size + sizeof(MemBlock);
+            current->next = current->next->next;
+        }
 
+        current = current->next;
+        i++;
+    }
 }
 
-/*
+
 int myFree(void* p)
 {
+    MemBlock *current = p;
+
+    printf("Bloc (%d bytes)\n", mem->first);
+
 
 }
-*/
+
 
 int freeMemory()
 {
@@ -124,10 +189,10 @@ void printAllMemory()
     MemBlock *current = mem->first;
     int i = 1;
 
-    printf("---------- Résumé de la mémoire ----------\n\n");
+    printf("\n---------- Résumé de la mémoire ----------\n\n");
 
     printf("Taille totale : %d bytes\n", mem->size);
-    printf("Adresse : %u\n\n", mem->buf);
+    printf("Adresse : %p\n\n", mem->buf);
     //printf("************************************************\n");
     if(current == NULL)
         printf("Mémoire vide\n");
@@ -135,7 +200,7 @@ void printAllMemory()
     {
         printf("----- Bloc mémoire %d -----\n", i);
         printf("Taille : %d bytes\n", current->size);
-        printf("Adresse relative : %u | Adresse absolue : %u\n", current->data - mem->buf, current->data);
+        printf("Adresse relative : %u | Adresse absolue : %p\n", (int)(current->data - mem->buf), current->data);
         printf("Alloué : ");
         if(current->free)
             printf("NON\n");
@@ -162,8 +227,25 @@ int main()
     //int sizeFree = freeMemory();
     //printf("Free size : %d\n\n", sizeFree);
 
+
     myAlloc(200);
     printAllMemory();
+
+    MemBlock *mb1 = myAlloc(300);
+    printAllMemory();
+
+    MemBlock *mb2 = myAlloc(80);
+    printAllMemory();
+
+    myAlloc(280);
+    printAllMemory();
+
+    myAlloc(21);
+    printAllMemory();
+
+    myFree(mb1);
+    myFree(mb2);
+
 
     /*
     printf("MA : %u\n\n", mem->buf);
