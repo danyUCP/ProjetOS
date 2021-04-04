@@ -4,11 +4,9 @@
 #define MEM_SIZE 10000
 
 
-char *memory;
-
 typedef struct block
 {
-    size_t size;
+    int size;
     int free;
 
     char *data;
@@ -16,46 +14,131 @@ typedef struct block
     struct block *next;
 }MemBlock;
 
+
+typedef struct
+{
+    char *buf;
+    int size;
+    MemBlock *first;
+    MemBlock *last;
+}Memory;
+
+Memory *mem;
+
 int initMemory(int nBytes)
 {
-    memory = malloc(nBytes);
+    mem = (Memory*) malloc(sizeof(Memory));
 
-    if(memory == NULL)
+    if(mem == NULL)
         return 0;
+
+    mem->buf = (char*) malloc(nBytes);
+    mem->size = nBytes;
+
+
+    MemBlock *firstBlock = (MemBlock*) malloc(sizeof(MemBlock));
+    firstBlock->size = mem->size;
+    firstBlock->free = 1;
+    firstBlock->data = mem->buf;
+    firstBlock->next = NULL;
+
+
+    mem->first = firstBlock;
+    mem->last = NULL;
+
+    printf("Mémoire initialisée\n\n");
+
+    return mem->size;
+}
+
+/*
+void* myAlloc(int nBytes)
+{
+
+}
+
+int myFree(void* p)
+{
+
+}
+*/
+
+int freeMemory()
+{
+    MemBlock *current = mem->first, *next;
+    int nBytes = mem->size, i = 1;
+
+    if(nBytes == 0)
+        return -1;
+
+    while(current != NULL)
+    {
+        next = current->next;
+
+        printf("Nettoyage du bloc %d (%d bytes)\n", i, current->size);
+        free(current);
+
+        current = next;
+    }
+
+
+    printf("Libération de la mémoire\n\n");
+    free(mem->buf);
+    mem->size = 0;
+    mem->first = NULL;
+    mem->last = NULL;
 
     return nBytes;
 }
 
+void printAllMemory()
+{
+    MemBlock *current = mem->first;
+    int i = 1;
 
+    printf("---------- Résumé de la mémoire ----------\n\n");
+
+    printf("Taille totale : %d\n", mem->size);
+    printf("Adresse : %p\n\n", mem->buf);
+    //printf("************************************************\n");
+    if(current == NULL)
+        printf("Mémoire vide\n");
+    while(current != NULL)
+    {
+        printf("----- Bloc mémoire %d -----\n", i);
+        printf("Taille : %d\n", current->size);
+        printf("Adresse : %p\n", current->data);
+        printf("Alloué : ");
+        if(current->free)
+            printf("NON\n");
+        else
+            printf("OUI\n");
+
+        current = current->next;
+        i++;
+    }
+    printf("\n******************************************\n\n");
+
+}
 
 
 int main()
 {
-    char tab[10] = "abcdef";
+    int size = initMemory(MEM_SIZE);
+    printf("Memoire allouée : %d bytes\n\n", size);
 
-    printf("%c : %d\n", tab[0], &tab[0]);
-    printf("%c : %d\n", tab[1], &tab[1]);
-    printf("%c : %d\n", tab[2], &tab[2]);
-    printf("%c : %d\n", tab[3], &tab[3]);
-    printf("%c : %d\n", tab[4], &tab[4]);
-    printf("%c : %d\n", tab[5], &tab[5]);
-    printf("Char size : %d\n\n", sizeof(char));
-
-    int tab2[10] = {1, 2, 3, 4, 5, 6};
-
-    printf("%d : %d\n", tab2[0], &tab2[0]);
-    printf("%d : %d\n", tab2[1], &tab2[1]);
-    printf("%d : %d\n", tab2[2], &tab2[2]);
-    printf("%d : %d\n", tab2[3], &tab2[3]);
-    printf("%d : %d\n", tab2[4], &tab2[4]);
-    printf("%d : %d\n", tab2[5], &tab2[5]);
-    printf("Int size : %d\n\n", sizeof(int));
+    printAllMemory();
 
 
-    MemBlock m[2];
+    //int sizeFree = freeMemory();
+    //printf("Free size : %d\n\n", sizeFree);
 
-    printf("MemBlock size : %d\n\n", sizeof(m));
 
+    freeMemory();
+
+    printAllMemory();
+
+    free(mem);
 
     return 0;
 }
